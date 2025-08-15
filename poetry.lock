@@ -475,6 +475,18 @@ docs = ["Sphinx", "furo"]
 test = ["objgraph", "psutil", "setuptools"]
 
 [[package]]
+name = "include"
+version = "0.2.2"
+description = "Dynamic import from files and other sources"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "include-0.2.2-py2.py3-none-any.whl", hash = "sha256:58c7d81ba82b92ed432919aaa019bdde7258c569bfd85f1ea44a525576b20529"},
+    {file = "include-0.2.2.tar.gz", hash = "sha256:37c2c6854f145bce050e75847c8da17039bdfae76d2c7e95bf531eaad2148e69"},
+]
+
+[[package]]
 name = "inflection"
 version = "0.5.1"
 description = "A port of Ruby on Rails inflector to Python"
@@ -934,4 +946,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4.0"
-content-hash = "b91df49be136c7f1a02fa3b4c69cd9962c2471031e67afcee2c8aaef8acfe85e"
+content-hash = "7d45a2715c0abb623993ddc2faec8bbfb846ff5ab4ff35750ed0e67f0f78c1cb"
