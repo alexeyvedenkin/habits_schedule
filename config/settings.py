@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "habits",
     "users",
 ]
@@ -152,8 +151,8 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 
 # Установка расписания для деактивации пользователей
 CELERY_BEAT_SCHEDULE = {
-    'deactivate-inactive-users-every-month': {
-        'task': 'users.tasks.deactivate_inactive_users',
-        'schedule': crontab(day_of_week='*', hour='0', minute='0'),  # Каждую ночь в полночь
+    "deactivate-inactive-users-every-month": {
+        "task": "users.tasks.deactivate_inactive_users",
+        "schedule": crontab(day_of_week="*", hour="0", minute="0"),  # Каждую ночь в полночь
     },
 }
