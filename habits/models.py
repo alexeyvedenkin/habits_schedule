@@ -1,7 +1,8 @@
 from django.db import models
-from django.contrib.auth.models import User
+
 
 from habits.validators import validate_reward_or_related_habit, validate_related_habit, validate_pleasant_habit
+from users.models import User
 
 
 class Habit(models.Model):
