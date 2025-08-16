@@ -35,6 +35,15 @@ class Habit(models.Model):
     # Признак публичности
     is_public = models.BooleanField(default=False)
 
+    # Владелец привычки
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_habits', null=True)
+
+    def save(self, *args, **kwargs):
+        # Если владелец не указан, устанавливаем его на текущего пользователя
+        if not self.owner:
+            self.owner = self.user  # Устанавливаем владельца привычки как пользователя
+        super().save(*args, **kwargs)
+
     def clean(self):
         """Определяет метод clean для валидации"""
         validate_reward_or_related_habit(self.reward, self)
