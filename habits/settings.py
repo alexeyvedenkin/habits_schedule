@@ -3,10 +3,6 @@ from datetime import timedelta
 from pathlib import Path
 
 from celery.schedules import crontab
-from dotenv import load_dotenv
-
-
-load_dotenv(override=True)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -109,7 +105,6 @@ STATICFILES_DIRS = (BASE_DIR / "static",)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# AUTH_USER_MODEL = "users.User"
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
@@ -141,10 +136,8 @@ SIMPLE_JWT = {
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 
 # URL-адрес брокера сообщений
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
 
 # URL-адрес брокера результатов, также Redis
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 
 # Часовой пояс для работы Celery
 CELERY_TIMEZONE = TIME_ZONE
