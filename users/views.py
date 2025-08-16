@@ -10,4 +10,9 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'list']:
             return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]  # Защита для остальных действий
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        if self.action == 'list':
+            return User.objects.filter(is_public=True)  # Возвращает только публичные привычки
+        return super().get_queryset()  # Возвращает текущего пользователя для остальных действий
