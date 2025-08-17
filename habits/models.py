@@ -1,7 +1,7 @@
 from django.db import models
 
 from config import settings
-from habits.validators import validate_reward_or_related_habit, validate_related_habit, validate_pleasant_habit
+from habits.validators import validate_pleasant_habit, validate_related_habit, validate_reward_or_related_habit
 
 
 class Habit(models.Model):
@@ -21,7 +21,7 @@ class Habit(models.Model):
     is_pleasant = models.BooleanField(default=False)
 
     # Связанная привычка (может быть NULL)
-    related_habit = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
+    related_habit = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True)
 
     # Периодичность (по умолчанию ежедневная)
     frequency = models.IntegerField(default=1)  # Частота в днях
@@ -36,14 +36,16 @@ class Habit(models.Model):
     is_public = models.BooleanField(default=False)
 
     # Владелец привычки
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='owned_habits', blank=True, null=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="owned_habits", blank=True, null=True
+    )
 
     def clean(self):
-        """ Определяет метод clean для валидации """
+        """Определяет метод clean для валидации"""
         validate_reward_or_related_habit(self.reward, self)
         validate_related_habit(self)
         validate_pleasant_habit(self)
 
     def __str__(self):
-        """ Форматирует строку с информацией о привычке """
+        """Форматирует строку с информацией о привычке"""
         return f'Выполнить {self.action} в {self.time.strftime("%H:%M")} в {self.location}'

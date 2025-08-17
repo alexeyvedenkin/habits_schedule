@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
 
-    help = 'Создает суперпользователя с заданным email и паролем'
+    help = "Создает суперпользователя с заданным email и паролем"
 
     def handle(self, *args, **options):
         User = get_user_model()
@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
         user = User(
             email="testadmin@sky.pro",  # Установка email по умолчанию
-            chat_id=12345  # Удалил кавычки для числового значения
+            chat_id=12345,  # Удалил кавычки для числового значения
         )
 
         user.set_password("1234")  # Установка пароля по умолчанию
