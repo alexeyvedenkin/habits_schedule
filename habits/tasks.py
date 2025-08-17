@@ -19,7 +19,7 @@ def send_daily_habit_reminders():
 
         # Получаем все привычки, которые нужно выполнить сегодня
         habits = Habit.objects.filter(
-            periodicity__gte=weekday  # Проверяем периодичность
+            frequency__gte=weekday  # Проверяем периодичность
         ).select_related('user')
 
         # Группируем привычки по пользователям
