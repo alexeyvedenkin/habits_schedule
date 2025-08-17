@@ -8,6 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 @shared_task
 def send_daily_habit_reminders():
     """ Отправляет все дневные напоминания о привычках одним сообщением. Группирует по пользователям """
