@@ -1,31 +1,87 @@
 from django.core.exceptions import ValidationError
 
+from habits.models import Habit
 
-def validate_reward_or_related_habit(value, habit):
-    """Проверяет, что только одно из полей заполнено: вознаграждение или связанная привычка."""
-    if habit.reward and habit.related_habit:
-        raise ValidationError("Можно заполнить только одно из двух полей: вознаграждение или связанная привычка.")
+class CreateHabitValidator:
+
+    def __call__(self, attrs):
+        self.validate_habit(attrs)
+
+    def validate_habit(self, attrs):
+        is_pleasant = attrs.get("is_pleasant")
+
+        if is_pleasant:
+            reward = attrs.get("reward")
+            linked_habit = attrs.get("linked_habit")
+
+            if reward:
+                raise ValidationError(
+                    "У приятной привычки не может быть вознаграждения"
+                )
+            if linked_habit:
+                raise ValidationError(
+                    "У приятной привычки не может быть связанной привычки"
+                )
+        else:
+            reward = attrs.get("reward")
+            linked_habit = attrs.get("linked_habit")
+
+            if not reward and not linked_habit:
+                raise ValidationError(
+                    "У полезной привычки должно быть либо вознаграждение, либо связанная привычка"
+                )
+            elif reward and linked_habit:
+                raise ValidationError(
+                    "У полезной привычки должно быть либо вознаграждение, либо связанная привычка"
+                )
+            if linked_habit:
+                existing_linked_habit = Habit.objects.get(id=attrs["linked_habit"].id)
+                if not existing_linked_habit.is_pleasant:
+                    raise ValidationError("Связанная привычка должна быть приятной")
 
 
-def validate_duration(value):
-    """Проверяет, что время выполнения не больше 120 секунд."""
-    if value.total_seconds() > 120:
-        raise ValidationError("Время на выполнение не должно превышать 120 секунд.")
+class UpdateHabitValidator:
+    def __init__(self, instance=None):
+        self.instance = instance
 
+    def __call__(self, attrs):
+        self.validate_habit(attrs)
 
-def validate_related_habit(habit):
-    """Проверяет, чтобы связанная привычка была приятной."""
-    if habit.related_habit and not habit.related_habit.is_pleasant:
-        raise ValidationError("Связанная привычка должна быть приятной.")
+    def validate_habit(self, attrs):
+        if "is_pleasant" in attrs:
+            is_pleasant = attrs.get("is_pleasant")
+        else:
+            is_pleasant = self.instance.is_pleasant
 
+        if "reward" in attrs:
+            reward = attrs.get("reward")
+        else:
+            reward = self.instance.reward
 
-def validate_pleasant_habit(habit):
-    """Проверяет, что у приятной привычки нет вознаграждения и связанной привычки."""
-    if habit.is_pleasant and (habit.reward or habit.related_habit):
-        raise ValidationError("У приятной привычки не должно быть вознаграждения или связанной привычки.")
+        if "linked_habit" in attrs:
+            linked_habit = attrs.get("linked_habit")
+        else:
+            linked_habit = self.instance.linked_habit
 
-
-def validate_frequency(value):
-    """Проверяет, что привычку нельзя выполнять реже, чем 1 раз в 7 дней."""
-    if value < 7:
-        raise ValidationError("Периодичность выполнения привычки не может быть меньше 7 дней.")
+        if is_pleasant:
+            if reward:
+                raise ValidationError(
+                    "У приятной привычки не может быть вознаграждения"
+                )
+            if linked_habit:
+                raise ValidationError(
+                    "У приятной привычки не может быть связанной привычки"
+                )
+        else:
+            if not reward and not linked_habit:
+                raise ValidationError(
+                    "У полезной привычки должно быть либо вознаграждение, либо связанная привычка"
+                )
+            elif reward and linked_habit:
+                raise ValidationError(
+                    "У полезной привычки должно быть либо вознаграждение, либо связанная привычка"
+                )
+            if linked_habit:
+                existing_linked_habit = Habit.objects.get(id=linked_habit.id)
+                if not existing_linked_habit.is_pleasant:
+                    raise ValidationError("Связанная привычка должна быть приятной")
