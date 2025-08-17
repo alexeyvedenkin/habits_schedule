@@ -23,11 +23,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "rest_framework",
     "django_filters",
     "rest_framework_simplejwt",
     "django_extensions",
     "drf_yasg",
+    "corsheaders",
+    "django_celery_beat",
+
     "habits",
     "users",
 ]
@@ -154,10 +158,17 @@ CELERY_TASK_TRACK_STARTED = True
 # Максимальное время на выполнение задачи
 CELERY_TASK_TIME_LIMIT = 30 * 60
 
-# Установка расписания для деактивации пользователей
+# Установка расписания для отправки сообщений
 CELERY_BEAT_SCHEDULE = {
-    "deactivate-inactive-users-every-month": {
-        "task": "users.tasks.deactivate_inactive_users",
-        "schedule": crontab(day_of_week="*", hour="0", minute="0"),  # Каждую ночь в полночь
+    'send-daily-habits-reminder': {
+        'task': 'habits.tasks.send_daily_habit_reminders',
+        'schedule': crontab(hour=8, minute=0),  # Каждый день в 8:00 утра
+    },
+    "send_habit_reminders": {
+        "task": "habits.tasks.send_habit_reminders",
+        "schedule": crontab(minute='*'),  # Каждую минуту
     },
 }
+
+TELEGRAM_URL = "https://api.telegram.org/bot"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
