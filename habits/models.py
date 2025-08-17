@@ -1,12 +1,12 @@
 from django.db import models
-from django.contrib.auth.models import User
 
+from config import settings
 from habits.validators import validate_reward_or_related_habit, validate_related_habit, validate_pleasant_habit
 
 
 class Habit(models.Model):
     # Пользователь — создатель привычки
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     # Место, в котором необходимо выполнять привычку
     location = models.CharField(max_length=100)
@@ -34,6 +34,9 @@ class Habit(models.Model):
 
     # Признак публичности
     is_public = models.BooleanField(default=False)
+
+    # Владелец привычки
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='owned_habits', blank=True, null=True)
 
     def clean(self):
         """ Определяет метод clean для валидации """
