@@ -1,7 +1,5 @@
 from django.core.exceptions import ValidationError
 
-from habits.models import Habit
-
 
 class CreateHabitValidator:
 
@@ -9,6 +7,7 @@ class CreateHabitValidator:
         self.validate_habit(attrs)
 
     def validate_habit(self, attrs):
+        from habits.models import Habit
         is_pleasant = attrs.get("is_pleasant")
 
         if is_pleasant:
@@ -41,6 +40,7 @@ class UpdateHabitValidator:
         self.validate_habit(attrs)
 
     def validate_habit(self, attrs):
+        from habits.models import Habit
         if "is_pleasant" in attrs:
             is_pleasant = attrs.get("is_pleasant")
         else:
