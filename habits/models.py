@@ -31,7 +31,7 @@ class Habit(models.Model):
     reward = models.CharField(max_length=255, verbose_name="Вознаграждение")
 
     # Время на выполнение привычки
-    duration = models.DurationField(verbose_name = "Время на выполнение (в секундах)")
+    duration = models.DurationField(verbose_name="Время на выполнение (в секундах)")
 
     # Признак публичности
     is_public = models.BooleanField(default=False, verbose_name="Публичность")
@@ -43,7 +43,7 @@ class Habit(models.Model):
         related_name="owned_habits",
         blank=True,
         null=True,
-        verbose_name="Владелец привычки"
+        verbose_name="Владелец привычки",
     )
 
     class Meta:
@@ -60,11 +60,7 @@ class Habit(models.Model):
         # Создаём экземпляр валидатора для создания привычки
         validator = CreateHabitValidator()
         # Собираем данные в атрибуты (в формате словаря)
-        attrs = {
-            "reward": self.reward,
-            "is_pleasant": self.is_pleasant,
-            "linked_habit": self.related_habit
-        }
+        attrs = {"reward": self.reward, "is_pleasant": self.is_pleasant, "linked_habit": self.related_habit}
         # Вызываем валидатор
         validator(attrs)
 

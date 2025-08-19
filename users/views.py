@@ -1,19 +1,16 @@
-from rest_framework import permissions, viewsets
+from rest_framework.generics import CreateAPIView
+from rest_framework.permissions import AllowAny
 
-from .models import User
-from .serializers import UserSerializer
+from users.models import User
+from users.serializers import UserSerializer
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserCreateAPIView(CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = (AllowAny,)
 
-    def get_permissions(self):
-        if self.action in ["create", "list"]:
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
-
-    def get_queryset(self):
-        if self.action == "list":
-            return User.objects.filter(is_public=True)  # Возвращает только публичные привычки
-        return super().get_queryset()  # Возвращает текущего пользователя для остальных действий
+    def perform_create(self, serializer):
+        user = serializer.save(is_active=True)
+        user.set_password(user.password)
+        user.save()

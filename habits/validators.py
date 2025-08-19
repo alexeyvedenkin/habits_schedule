@@ -8,6 +8,7 @@ class CreateHabitValidator:
 
     def validate_habit(self, attrs):
         from habits.models import Habit
+
         is_pleasant = attrs.get("is_pleasant")
 
         if is_pleasant:
@@ -41,6 +42,7 @@ class UpdateHabitValidator:
 
     def validate_habit(self, attrs):
         from habits.models import Habit
+
         if "is_pleasant" in attrs:
             is_pleasant = attrs.get("is_pleasant")
         else:

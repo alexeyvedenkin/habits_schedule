@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "rest_framework",
     "django_filters",
     "rest_framework_simplejwt",
@@ -31,7 +30,6 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "django_celery_beat",
-
     "habits",
     "users",
 ]
@@ -160,13 +158,13 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 
 # Установка расписания для отправки сообщений
 CELERY_BEAT_SCHEDULE = {
-    'send-daily-habits-reminder': {
-        'task': 'habits.tasks.send_daily_habit_reminders',
-        'schedule': crontab(hour=8, minute=0),  # Каждый день в 8:00 утра
+    "send-daily-habits-reminder": {
+        "task": "habits.tasks.send_daily_habit_reminders",
+        "schedule": crontab(hour=8, minute=0),  # Каждый день в 8:00 утра
     },
     "send_habit_reminders": {
         "task": "habits.tasks.send_habit_reminders",
-        "schedule": crontab(minute='*'),  # Каждую минуту
+        "schedule": crontab(minute="*"),  # Каждую минуту
     },
 }
 
