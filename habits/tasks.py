@@ -12,14 +12,16 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def send_daily_habit_reminders():
-    """Отправляет все дневные напоминания о привычках одним сообщением. Группирует по пользователям"""
+    """ Отправляет все дневные напоминания о привычках одним сообщением с группировкой по пользователям """
 
     try:
-        today = timezone.now().date()
+        today = timezone.now().date()  # Получаем сегодняшнюю дату
         weekday = timezone.now().isoweekday()  # 1-7 (пн-вс)
 
         # Получаем все привычки, которые нужно выполнить сегодня
-        habits = Habit.objects.filter(frequency__gte=weekday).select_related("user")  # Проверяем периодичность
+        # Добавлена фильтрация по дате (today)
+        habits = Habit.objects.filter(frequency__gte=weekday, date=today).select_related(
+            "user")  # Проверяем периодичность
 
         # Группируем привычки по пользователям
         user_habits = defaultdict(list)
@@ -34,13 +36,13 @@ def send_daily_habit_reminders():
 
             message = "Ваши привычки на сегодня:\n\n"
             for habit in sorted(habits, key=lambda h: h.time):
-                message += f"{habit.time.strftime('%H:%M')} - {habit.action}\n" f"{habit.place}\n\n"
+                message += f"{habit.time.strftime('%H:%M')} - {habit.action}\n{habit.place}\n\n"
 
-                try:
-                    send_telegram_message(user.chat_id, message)
-                    logger.info(f"Отправлено дневное напоминание для {user.email}")
-                except Exception as e:
-                    logger.error(f"Ошибка отправки для {user.email}: {str(e)}")
+            try:
+                send_telegram_message(user.chat_id, message)
+                logger.info(f"Отправлено дневное напоминание для {user.email}")
+            except Exception as e:
+                logger.error(f"Ошибка отправки для {user.email}: {str(e)}")
 
     except Exception as e:
         logger.error(f"Ошибка в задаче send_daily_habit_reminders: {str(e)}")
@@ -48,7 +50,7 @@ def send_daily_habit_reminders():
 
 @shared_task
 def send_habit_reminders():
-    """Отправляет напоминания о привычках в указанное время с учетом периодичности выполнения"""
+    """ Отправляет напоминания о привычках в указанное время с учетом периодичности выполнения """
 
     try:
         now = timezone.now()
