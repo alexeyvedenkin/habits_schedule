@@ -23,6 +23,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
+    # Зависимости
     "rest_framework",
     "django_filters",
     "rest_framework_simplejwt",
@@ -30,6 +32,8 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "django_celery_beat",
+
+    # Приложения проекта
     "habits",
     "users",
 ]
@@ -50,7 +54,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-]
+    'corsheaders.middleware.CorsMiddleware',
+  ]
 
 ROOT_URLCONF = "config.urls"
 
@@ -168,5 +173,18 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+# Настройки Telegram
 TELEGRAM_URL = "https://api.telegram.org/bot"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Настройки CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Адрес фронтенд-сервера
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://read-and-write.example.com",  # Адрес фронтенд-сервера
+    "http://localhost:8000",  # Адрес бэкенд-сервера
+]
+
+CORS_ALLOW_ALL_ORIGINS = False
