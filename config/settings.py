@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "django_celery_beat",
+    "rest_framework.authtoken",
 
     # Приложения проекта
     "habits",

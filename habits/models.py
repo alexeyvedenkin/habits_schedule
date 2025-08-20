@@ -28,7 +28,7 @@ class Habit(models.Model):
     frequency = models.PositiveSmallIntegerField(default=1, verbose_name="Периодичность")
 
     # Вознаграждение после выполнения
-    reward = models.CharField(max_length=255, verbose_name="Вознаграждение")
+    reward = models.CharField(max_length=255, blank=True, null=True, verbose_name="Вознаграждение")
 
     # Время на выполнение привычки
     duration = models.DurationField(verbose_name="Время на выполнение (в секундах)")
@@ -41,8 +41,6 @@ class Habit(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="owned_habits",
-        blank=True,
-        null=True,
         verbose_name="Владелец привычки",
     )
 

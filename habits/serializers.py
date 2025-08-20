@@ -9,7 +9,6 @@ class HabitSerializer(ModelSerializer):
     class Meta:
         model = Habit
         fields = "__all__"
-        read_only_fields = ("user",)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
