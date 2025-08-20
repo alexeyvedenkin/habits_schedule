@@ -13,23 +13,23 @@ class CreateHabitValidator:
 
         if is_pleasant:
             reward = attrs.get("reward")
-            linked_habit = attrs.get("linked_habit")
+            related_habit = attrs.get("related_habit")
 
             if reward:
                 raise ValidationError("У приятной привычки не может быть вознаграждения")
-            if linked_habit:
+            if related_habit:
                 raise ValidationError("У приятной привычки не может быть связанной привычки")
         else:
             reward = attrs.get("reward")
-            linked_habit = attrs.get("linked_habit")
+            related_habit_id = attrs.get("related_habit")
 
-            if not reward and not linked_habit:
+            if not reward and not related_habit_id:
                 raise ValidationError("У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
-            elif reward and linked_habit:
+            elif reward and related_habit_id:
                 raise ValidationError("У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
-            if linked_habit:
-                existing_linked_habit = Habit.objects.get(id=attrs["linked_habit"].id)
-                if not existing_linked_habit.is_pleasant:
+            if related_habit_id:
+                existing_related_habit = Habit.objects.get(id=attrs["related_habit"].id)
+                if not existing_related_habit.is_pleasant:
                     raise ValidationError("Связанная привычка должна быть приятной")
 
 
@@ -53,22 +53,22 @@ class UpdateHabitValidator:
         else:
             reward = self.instance.reward
 
-        if "linked_habit" in attrs:
-            linked_habit = attrs.get("linked_habit")
+        if "related_habit" in attrs:
+            related_habit = attrs.get("related_habit")
         else:
-            linked_habit = self.instance.linked_habit
+            related_habit = self.instance.related_habit
 
         if is_pleasant:
-            if reward:
-                raise ValidationError("У приятной привычки не может быть вознаграждения")
-            if linked_habit:
+            if related_habit:  # Сначала проверяем на связанную привычку
                 raise ValidationError("У приятной привычки не может быть связанной привычки")
+            if reward:  # Проверка на вознаграждение
+                raise ValidationError("У приятной привычки не может быть вознаграждения")
         else:
-            if not reward and not linked_habit:
+            if not reward and not related_habit:
                 raise ValidationError("У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
-            elif reward and linked_habit:
+            elif reward and related_habit:
                 raise ValidationError("У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
-            if linked_habit:
-                existing_linked_habit = Habit.objects.get(id=linked_habit.id)
-                if not existing_linked_habit.is_pleasant:
+            if related_habit:
+                existing_related_habit = Habit.objects.get(id=related_habit.id)
+                if not existing_related_habit.is_pleasant:
                     raise ValidationError("Связанная привычка должна быть приятной")
