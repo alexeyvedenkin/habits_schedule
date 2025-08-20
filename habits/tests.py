@@ -5,7 +5,6 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-# from rest_framework.exceptions import ValidationError
 from rest_framework.test import APITestCase
 
 from habits.models import Habit
@@ -20,7 +19,7 @@ class HabitTests(APITestCase):
         """Создает тестового пользователя перед каждым тестом"""
         self.user_data = {
             "email": "test@example.com",
-            "password": "password123",  # Убедитесь, что пароль соответствует требованиям
+            "password": "password123",  # Проверка, что пароль соответствует требованиям
             "chat_id": 1234567890,
         }
         response = self.client.post("/users/register/", self.user_data)
@@ -36,9 +35,9 @@ class HabitTests(APITestCase):
         self.habit = Habit.objects.create(
             user=self.user,
             time=time(1, 0),
-            reward="Some reward",  # Теперь мы добавляем вознаграждение
+            reward="Some reward",
             duration=timedelta(seconds=120),
-            is_pleasant=False,  # Устанавливаем is_pleasant в True
+            is_pleasant=False,
         )
 
         # Создаем полезную привычку для теста
@@ -263,23 +262,20 @@ class HabitTests(APITestCase):
         # Создаём валидатор с существующим экземпляром привычки
         validator = UpdateHabitValidator(instance=self.habit)
 
-        # try:
         # Вызываем валидатор с обновлёнными данными
         validator(update_data)
         # Обновляем привычку, используя данные из update_data
         for key, value in update_data.items():
             setattr(self.habit, key, value)  # Обновляем атрибуты экземпляра
         self.habit.save()  # Сохраняем изменения в базе данных
-        # except ValidationError:
-        #     self.fail("ValidationError была вызвана, но не ожидалась.")
 
         # Добавляем проверку, чтобы увидеть, что обновление прошло успешно
         self.habit.refresh_from_db()  # Обновляем экземпляр с базы
         self.assertEqual(self.habit.reward, "Updated reward")  # Проверяем новое значение
 
     def test_related_habit_validation(self):
-        # Логика создания новой привычки, которая хуже
-        self.unpleasant_habit.is_pleasant = False  # Убедитесь, что не приятная
+        # Логика создания полезной привычки
+        self.unpleasant_habit.is_pleasant = False
         self.unpleasant_habit.save()
 
         with self.assertRaises(ValidationError) as context:
@@ -291,7 +287,7 @@ class HabitTests(APITestCase):
                 is_pleasant=False,
                 related_habit=self.unpleasant_habit,
             )
-            habit.clean()  # Это вызовет валидацию
+            habit.clean()
 
         self.assertEqual(str(context.exception.args[0]), "Связанная привычка должна быть приятной")
 
