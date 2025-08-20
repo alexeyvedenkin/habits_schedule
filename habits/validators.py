@@ -15,10 +15,11 @@ class CreateHabitValidator:
             reward = attrs.get("reward")
             related_habit = attrs.get("related_habit")
 
-            if reward:
-                raise ValidationError("У приятной привычки не может быть вознаграждения")
             if related_habit:
                 raise ValidationError("У приятной привычки не может быть связанной привычки")
+            if reward:
+                raise ValidationError("У приятной привычки не может быть вознаграждения")
+
         else:
             reward = attrs.get("reward")
             related_habit_id = attrs.get("related_habit")

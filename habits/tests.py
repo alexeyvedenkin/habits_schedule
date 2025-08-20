@@ -42,12 +42,19 @@ class HabitTests(APITestCase):
             is_pleasant=False  # Устанавливаем is_pleasant в True
         )
 
+        # Создаем полезную привычку для теста
+        self.unpleasant_habit = Habit.objects.create(
+            user=self.user,
+            time=time(2, 0),
+            reward="Unpleasant reward",
+            duration=timedelta(seconds=60),
+            is_pleasant=False
+        )
+
     def test_clean_valid_duration(self):
         """ Проверка, что clean не вызывает ошибку при корректном duration """
-        try:
-            self.habit.clean()  # Вызываем метод clean
-        except ValidationError:
-            self.fail("clean() вызвал ValidationError при корректном duration.")
+        self.habit.clean()  # Вызываем метод clean
+
 
     def test_clean_invalid_duration(self):
         """ Проверка, что clean вызывает ошибку при некорректном duration """
@@ -150,6 +157,34 @@ class HabitTests(APITestCase):
         self.assertEqual(str(context.exception.args[0]),
                          "У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
 
+    def test_create_pleasant_habit_with_related_habit(self):
+        """ Тестирует создание приятной привычки со связанной привычкой """
+        # Создаем другую привычку, чтобы использовать её как связанную
+        related_habit = Habit.objects.create(
+            user=self.user,
+            time=time(2, 0),
+            action="Related action",
+            duration=timedelta(seconds=120),
+            is_pleasant=True,  # Связанная привычка должна быть приятной
+            reward="Some reward"  # Добавляем значение для reward
+        )
+
+        # Пытаемся создать привычку с is_pleasant=True и без related_habit
+        with self.assertRaises(ValidationError) as context:
+            habit = Habit(
+                user=self.user,
+                time=time(3, 0),
+                action="Pleasant action",
+                duration=timedelta(seconds=120),
+                is_pleasant=True,
+                reward="Pleasant reward",
+                related_habit=related_habit,
+            )
+            habit.clean()  # Явно вызываем метод clean()
+
+        # Проверяем сообщение об ошибке
+        self.assertEqual(str(context.exception.args[0]), "У приятной привычки не может быть связанной привычки")
+
     def test_related_habit_not_pleasant(self):
         """Тест на создание полезной привычки с неприятной связанной привычкой"""
         # Создание связанной привычки
@@ -222,12 +257,66 @@ class HabitTests(APITestCase):
             })
         self.assertEqual(str(context.exception.args[0]), "У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
 
+    def test_update_habit_without_is_pleasant(self):
+        """ Тестирует обновление привычки без указания is_pleasant """
+        # Изменяем только reward, не указывая is_pleasant
+        update_data = {
+            "reward": "Updated reward",
+        }
+
+        # Создаём валидатор с существующим экземпляром привычки
+        validator = UpdateHabitValidator(instance=self.habit)
+
+        # try:
+        # Вызываем валидатор с обновлёнными данными
+        validator(update_data)
+        # Обновляем привычку, используя данные из update_data
+        for key, value in update_data.items():
+            setattr(self.habit, key, value)  # Обновляем атрибуты экземпляра
+        self.habit.save()  # Сохраняем изменения в базе данных
+        # except ValidationError:
+        #     self.fail("ValidationError была вызвана, но не ожидалась.")
+
+        # Добавляем проверку, чтобы увидеть, что обновление прошло успешно
+        self.habit.refresh_from_db()  # Обновляем экземпляр с базы
+        self.assertEqual(self.habit.reward, "Updated reward")  # Проверяем новое значение
+
+    def test_related_habit_validation(self):
+        # Логика создания новой привычки, которая хуже
+        self.unpleasant_habit.is_pleasant = False  # Убедитесь, что не приятная
+        self.unpleasant_habit.save()
+
+        with self.assertRaises(ValidationError) as context:
+            habit = Habit(
+                user=self.user,
+                time=time(3, 0),
+                reward="Test reward",
+                duration=timedelta(seconds=60),
+                is_pleasant=False,
+                related_habit=self.unpleasant_habit
+            )
+            habit.clean()  # Это вызовет валидацию
+
+        self.assertEqual(str(context.exception.args[0]), "Связанная привычка должна быть приятной")
+
+    def test_habit_validation(self):
+        # Удаление reward для проверки условия валидации
+        self.unpleasant_habit.reward = None  # Убираем вознаграждение
+
+        # Проверка валидации для unpleasant_habit без вознаграждения
+        with self.assertRaises(ValidationError) as context:
+            self.unpleasant_habit.clean()  # Запуск метода clean для проверки валидации
+
+        # Проверяем ожидаемое сообщение об ошибке
+        self.assertEqual(str(context.exception.args[0]),
+                         "У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
+
 
 class TestHabitSerializer(unittest.TestCase):
 
     def test_update_validator(self):
         # Создаем экземпляр HabitSerializer с экземпляром
-        instance = "some_habit_instance"  # замените на фактический объект
+        instance = "some_habit_instance"
         serializer = HabitSerializer(instance=instance)
 
         # Проверяем, что валидатор установлен
@@ -240,44 +329,3 @@ class TestHabitSerializer(unittest.TestCase):
 
         # Проверяем, что валидатор установлен для создания
         self.assertIsInstance(serializer.validators[0], CreateHabitValidator)
-
-
-
-
-# class ValidationError(Exception):
-#     """Определение исключения для ошибок валидации."""
-#     pass
-
-
-# class Habit:
-#     """Простая модель привычки для тестирования."""
-#     def __init__(self, id, is_pleasant):
-#         self.id = id
-#         self.is_pleasant = is_pleasant
-#
-#
-#     def test_update_habit_validator(self):
-#         # Создаем пример привычки
-#         instance = Habit(id=1, is_pleasant=False)
-#         validator = UpdateHabitValidator(instance)
-#
-#         # Тест 1: валидные данные
-#         try:
-#             validator({"is_pleasant": False, "reward": "test reward"})
-#             print("Тест 1 пройден.")
-#         except ValidationError as e:
-#             print(f"Тест 1 не пройден: {e}")
-#
-#         # Тест 2: ошибка о недопустимом вознаграждении
-#         try:
-#             validator({"is_pleasant": True, "reward": "test reward"})
-#             print("Тест 2 не пройден.")  # Не должно успешно пройти
-#         except ValidationError:
-#             print("Тест 2 пройден.")
-#
-#         # Тест 3: ошибка о недопустимой связанной привычке
-#         try:
-#             validator({"is_pleasant": True, "linked_habit": Habit(2, True)})
-#             print("Тест 3 не пройден.")  # Не должно успешно пройти
-#         except ValidationError:
-#             print("Тест 3 пройден.")

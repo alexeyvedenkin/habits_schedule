@@ -55,11 +55,19 @@ class Habit(models.Model):
         if self.duration.total_seconds() <= 0 or self.duration.total_seconds() > 120:
             raise ValidationError("Время на выполнение должно быть более 0, но не более 120 секунд.")
 
-        # Создаём экземпляр валидатора для создания привычки
+        if not self.is_pleasant and not self.reward and not self.related_habit:
+            raise ValidationError("У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
+
+        if self.is_pleasant and self.related_habit:
+            raise ValidationError("У приятной привычки не может быть связанной привычки")
+
+        # Проверяем, связанная привычка должна быть приятной
+        if self.related_habit and not self.related_habit.is_pleasant:
+            raise ValidationError("Связанная привычка должна быть приятной")
+
+        # Создаем валидатор для вознаграждения
+        attrs = {"reward": self.reward, "is_pleasant": self.is_pleasant, "related_habit": self.related_habit}
         validator = CreateHabitValidator()
-        # Собираем данные в атрибуты (в формате словаря)
-        attrs = {"reward": self.reward, "is_pleasant": self.is_pleasant, "linked_habit": self.related_habit}
-        # Вызываем валидатор
         validator(attrs)
 
     def __str__(self):
