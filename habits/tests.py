@@ -46,7 +46,6 @@ class HabitTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
 
         response = self.client.post(url, data, format='json')
-        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)  # Проверяем, что ответ 201
         self.assertEqual(response.data["action"], "Завтрак")  # Проверяем, что действие совпадает
 
