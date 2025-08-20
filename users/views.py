@@ -1,7 +1,7 @@
 from django.contrib.auth.hashers import make_password
+from rest_framework.authtoken.models import Token
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny
-from rest_framework.authtoken.models import Token
 
 from users.models import User
 from users.serializers import UserSerializer

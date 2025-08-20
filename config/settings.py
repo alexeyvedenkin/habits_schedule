@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # Зависимости
     "rest_framework",
     "django_filters",
@@ -33,7 +32,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_celery_beat",
     "rest_framework.authtoken",
-
     # Приложения проекта
     "habits",
     "users",
@@ -55,7 +53,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'corsheaders.middleware.CorsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"

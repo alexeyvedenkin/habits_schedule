@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def send_daily_habit_reminders():
-    """ Отправляет все дневные напоминания о привычках одним сообщением с группировкой по пользователям """
+    """Отправляет все дневные напоминания о привычках одним сообщением с группировкой по пользователям"""
 
     try:
         today = timezone.now().date()  # Получаем сегодняшнюю дату
@@ -21,7 +21,8 @@ def send_daily_habit_reminders():
         # Получаем все привычки, которые нужно выполнить сегодня
         # Добавлена фильтрация по дате (today)
         habits = Habit.objects.filter(frequency__gte=weekday, date=today).select_related(
-            "user")  # Проверяем периодичность
+            "user"
+        )  # Проверяем периодичность
 
         # Группируем привычки по пользователям
         user_habits = defaultdict(list)
@@ -50,7 +51,7 @@ def send_daily_habit_reminders():
 
 @shared_task
 def send_habit_reminders():
-    """ Отправляет напоминания о привычках в указанное время с учетом периодичности выполнения """
+    """Отправляет напоминания о привычках в указанное время с учетом периодичности выполнения"""
 
     try:
         now = timezone.now()

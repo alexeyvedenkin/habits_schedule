@@ -49,7 +49,7 @@ class Habit(models.Model):
         verbose_name_plural = "Привычки"
 
     def clean(self):
-        """ Определяет метод clean для валидации """
+        """Определяет метод clean для валидации"""
 
         # Проверяем, что duration больше 0 и не более 120 секунд
         if self.duration.total_seconds() <= 0 or self.duration.total_seconds() > 120:
@@ -71,5 +71,5 @@ class Habit(models.Model):
         validator(attrs)
 
     def __str__(self):
-        """ Форматирует строку с информацией о привычке """
+        """Форматирует строку с информацией о привычке"""
         return f'Выполнить {self.action} в {self.time.strftime("%H:%M")} в {self.location}'

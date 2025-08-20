@@ -1,33 +1,32 @@
 import unittest
-from datetime import timedelta, time
+from datetime import time, timedelta
 
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 # from rest_framework.exceptions import ValidationError
 from rest_framework.test import APITestCase
-from rest_framework.authtoken.models import Token
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from habits.models import Habit
 from habits.serializers import HabitSerializer
-from habits.validators import UpdateHabitValidator, CreateHabitValidator
+from habits.validators import CreateHabitValidator, UpdateHabitValidator
 from users.models import User
-from users.views import UserCreateAPIView
 
 
 class HabitTests(APITestCase):
 
     def setUp(self):
-        """ Создает тестового пользователя перед каждым тестом """
+        """Создает тестового пользователя перед каждым тестом"""
         self.user_data = {
             "email": "test@example.com",
             "password": "password123",  # Убедитесь, что пароль соответствует требованиям
-            "chat_id": 1234567890
+            "chat_id": 1234567890,
         }
-        response = self.client.post('/users/register/', self.user_data)
+        response = self.client.post("/users/register/", self.user_data)
         self.assertEqual(response.status_code, 201)  # Проверяем, что пользователь был успешно создан
 
-        self.user = User.objects.get(email=self.user_data['email'])
+        self.user = User.objects.get(email=self.user_data["email"])
         self.token = Token.objects.get(user=self.user)
 
         # Принудительное прохождение аутентификации для следующих запросов
@@ -39,7 +38,7 @@ class HabitTests(APITestCase):
             time=time(1, 0),
             reward="Some reward",  # Теперь мы добавляем вознаграждение
             duration=timedelta(seconds=120),
-            is_pleasant=False  # Устанавливаем is_pleasant в True
+            is_pleasant=False,  # Устанавливаем is_pleasant в True
         )
 
         # Создаем полезную привычку для теста
@@ -48,28 +47,27 @@ class HabitTests(APITestCase):
             time=time(2, 0),
             reward="Unpleasant reward",
             duration=timedelta(seconds=60),
-            is_pleasant=False
+            is_pleasant=False,
         )
 
     def test_clean_valid_duration(self):
-        """ Проверка, что clean не вызывает ошибку при корректном duration """
+        """Проверка, что clean не вызывает ошибку при корректном duration"""
         self.habit.clean()  # Вызываем метод clean
 
-
     def test_clean_invalid_duration(self):
-        """ Проверка, что clean вызывает ошибку при некорректном duration """
+        """Проверка, что clean вызывает ошибку при некорректном duration"""
         self.habit.duration = timedelta(seconds=130)  # Установим невалидное значение
         with self.assertRaises(ValidationError):
             self.habit.clean()  # Ожидаем ошибку
 
     def test_str_method(self):
-        """ Проверка, что метод __str__ возвращает корректную строку """
+        """Проверка, что метод __str__ возвращает корректную строку"""
         expected_str = f'Выполнить {self.habit.action} в {self.habit.time.strftime("%H:%M")} в {self.habit.location}'
         self.assertEqual(str(self.habit), expected_str)  # Проверяем ожидаемый результат
 
     def test_create_habit(self):
-        """ Тестируем создание привычки """
-        url = reverse('habits:habit-list-create')
+        """Тестируем создание привычки"""
+        url = reverse("habits:habit-list-create")
         data = {
             "user": self.user.id,
             "location": "Дом",
@@ -84,15 +82,15 @@ class HabitTests(APITestCase):
         }
 
         # Добавляем заголовок авторизации с токеном
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
 
-        response = self.client.post(url, data, format='json')
+        response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)  # Проверяем, что ответ 201
         self.assertEqual(response.data["action"], "Завтрак")  # Проверяем, что действие совпадает
 
     def test_create_habit_with_invalid_data(self):
-        """ Тестируем создание привычки с неверными данными """
-        url = reverse('habits:habit-list-create')
+        """Тестируем создание привычки с неверными данными"""
+        url = reverse("habits:habit-list-create")
         data = {
             "user": self.user.id,
             "location": "Офис",
@@ -107,23 +105,20 @@ class HabitTests(APITestCase):
         }
 
         # Добавляем заголовок авторизации с токеном
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
 
-        response = self.client.post(url, data, format='json')
-        response_content = response.content.decode('utf-8')
+        response = self.client.post(url, data, format="json")
+        response_content = response.content.decode("utf-8")
 
-        self.assertEqual(response.status_code,
-                         status.HTTP_400_BAD_REQUEST)  # Проверяем, что ответ 400 за неправильные данные
+        self.assertEqual(
+            response.status_code, status.HTTP_400_BAD_REQUEST
+        )  # Проверяем, что ответ 400 за неправильные данные
         self.assertIn("У приятной привычки не может быть вознаграждения", str(response_content))
 
     def test_pleasant_habit_without_reward_or_related_habit(self):
         """Тест на создание приятной привычки с вознаграждением"""
         validator = CreateHabitValidator()
-        attrs = {
-            "is_pleasant": True,
-            "reward": "Some reward",  # Здесь задано вознаграждение
-            "related_habit": None
-        }
+        attrs = {"is_pleasant": True, "reward": "Some reward", "related_habit": None}  # Здесь задано вознаграждение
 
         with self.assertRaises(ValidationError) as context:
             validator(attrs)  # Проверка работы валидатора
@@ -132,16 +127,14 @@ class HabitTests(APITestCase):
     def test_useful_habit_without_reward_or_related_habit(self):
         """Тест на создание полезной привычки без вознаграждения и связанной привычки"""
         validator = CreateHabitValidator()
-        attrs = {
-            "is_pleasant": False,
-            "reward": None,
-            "related_habit": None
-        }
+        attrs = {"is_pleasant": False, "reward": None, "related_habit": None}
 
         with self.assertRaises(ValidationError) as context:
             validator(attrs)  # Проверка работы валидатора
-        self.assertEqual(str(context.exception.args[0]),
-                         "У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
+        self.assertEqual(
+            str(context.exception.args[0]),
+            "У полезной привычки должно быть либо вознаграждение, либо связанная привычка",
+        )
 
     def test_useful_habit_with_both_reward_and_related_habit(self):
         """Тест на создание полезной привычки с вознаграждением и связанной привычкой"""
@@ -149,16 +142,18 @@ class HabitTests(APITestCase):
         attrs = {
             "is_pleasant": False,
             "reward": "Some reward",
-            "related_habit": 1  # Предполагается, что связанная привычка с ID 1 существует
+            "related_habit": 1,  # Предполагается, что связанная привычка с ID 1 существует
         }
 
         with self.assertRaises(ValidationError) as context:
             validator(attrs)  # Проверка работы валидатора
-        self.assertEqual(str(context.exception.args[0]),
-                         "У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
+        self.assertEqual(
+            str(context.exception.args[0]),
+            "У полезной привычки должно быть либо вознаграждение, либо связанная привычка",
+        )
 
     def test_create_pleasant_habit_with_related_habit(self):
-        """ Тестирует создание приятной привычки со связанной привычкой """
+        """Тестирует создание приятной привычки со связанной привычкой"""
         # Создаем другую привычку, чтобы использовать её как связанную
         related_habit = Habit.objects.create(
             user=self.user,
@@ -166,7 +161,7 @@ class HabitTests(APITestCase):
             action="Related action",
             duration=timedelta(seconds=120),
             is_pleasant=True,  # Связанная привычка должна быть приятной
-            reward="Some reward"  # Добавляем значение для reward
+            reward="Some reward",  # Добавляем значение для reward
         )
 
         # Пытаемся создать привычку с is_pleasant=True и без related_habit
@@ -193,15 +188,11 @@ class HabitTests(APITestCase):
             time=time(1, 0),
             reward="Related reward",  # Здесь мы задаем значение для вознаграждения
             duration=timedelta(seconds=120),
-            is_pleasant=False
+            is_pleasant=False,
         )
 
         validator = CreateHabitValidator()
-        attrs = {
-            "is_pleasant": False,
-            "reward": None,
-            "related_habit": related_habit
-        }
+        attrs = {"is_pleasant": False, "reward": None, "related_habit": related_habit}
 
         with self.assertRaises(ValidationError) as context:
             validator(attrs)  # Проверка работы валидатора
@@ -211,10 +202,12 @@ class HabitTests(APITestCase):
         """Тестируем, что при приятной привычке с вознаграждением выдается ошибка"""
         validator = UpdateHabitValidator(instance=self.habit)
         with self.assertRaises(ValidationError) as context:
-            validator({
-                "is_pleasant": True,
-                "reward": "Reward",
-            })
+            validator(
+                {
+                    "is_pleasant": True,
+                    "reward": "Reward",
+                }
+            )
         # Изменение: используем context.exception для извлечения ошибок
         self.assertEqual(str(context.exception.args[0]), "У приятной привычки не может быть вознаграждения")
 
@@ -222,43 +215,46 @@ class HabitTests(APITestCase):
         """Тестируем, что при приятной привычке со связанной привычкой выдается ошибка"""
         validator = UpdateHabitValidator(instance=self.habit)
         with self.assertRaises(ValidationError) as context:
-            validator({
-                "is_pleasant": True,
-                "related_habit": self.habit  # Используем текущую привычку как связанную
-            })
+            validator({"is_pleasant": True, "related_habit": self.habit})  # Используем текущую привычку как связанную
         self.assertEqual(str(context.exception.args[0]), "У приятной привычки не может быть связанной привычки")
 
     def test_update_habit_validator_unpleasant_without_reward_or_related_habit(self):
         """Тестируем, что если привычка полезная и нет вознаграждения или связанной привычки, выдается ошибка"""
         validator = UpdateHabitValidator(instance=self.habit)
         with self.assertRaises(ValidationError) as context:
-            validator({
-                "is_pleasant": False,  # Полезная привычка
-                "reward": None,
-                "related_habit": None,
-            })
-        self.assertEqual(str(context.exception.args[0]), "У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
+            validator(
+                {
+                    "is_pleasant": False,  # Полезная привычка
+                    "reward": None,
+                    "related_habit": None,
+                }
+            )
+        self.assertEqual(
+            str(context.exception.args[0]),
+            "У полезной привычки должно быть либо вознаграждение, либо связанная привычка",
+        )
 
     def test_update_habit_validator_unpleasant_with_both_reward_and_related_habit(self):
         """Тестируем, что если привычка полезная и есть оба: вознаграждение и связанная привычка, выдается ошибка"""
         related_habit = Habit.objects.create(
-            user=self.user,
-            time=time(2, 0),
-            reward="Related reward",
-            duration=timedelta(seconds=120),
-            is_pleasant=True
+            user=self.user, time=time(2, 0), reward="Related reward", duration=timedelta(seconds=120), is_pleasant=True
         )
         validator = UpdateHabitValidator(instance=self.habit)
         with self.assertRaises(ValidationError) as context:
-            validator({
-                "is_pleasant": False,
-                "reward": "Some Reward",
-                "related_habit": related_habit,
-            })
-        self.assertEqual(str(context.exception.args[0]), "У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
+            validator(
+                {
+                    "is_pleasant": False,
+                    "reward": "Some Reward",
+                    "related_habit": related_habit,
+                }
+            )
+        self.assertEqual(
+            str(context.exception.args[0]),
+            "У полезной привычки должно быть либо вознаграждение, либо связанная привычка",
+        )
 
     def test_update_habit_without_is_pleasant(self):
-        """ Тестирует обновление привычки без указания is_pleasant """
+        """Тестирует обновление привычки без указания is_pleasant"""
         # Изменяем только reward, не указывая is_pleasant
         update_data = {
             "reward": "Updated reward",
@@ -293,7 +289,7 @@ class HabitTests(APITestCase):
                 reward="Test reward",
                 duration=timedelta(seconds=60),
                 is_pleasant=False,
-                related_habit=self.unpleasant_habit
+                related_habit=self.unpleasant_habit,
             )
             habit.clean()  # Это вызовет валидацию
 
@@ -308,8 +304,10 @@ class HabitTests(APITestCase):
             self.unpleasant_habit.clean()  # Запуск метода clean для проверки валидации
 
         # Проверяем ожидаемое сообщение об ошибке
-        self.assertEqual(str(context.exception.args[0]),
-                         "У полезной привычки должно быть либо вознаграждение, либо связанная привычка")
+        self.assertEqual(
+            str(context.exception.args[0]),
+            "У полезной привычки должно быть либо вознаграждение, либо связанная привычка",
+        )
 
 
 class TestHabitSerializer(unittest.TestCase):
