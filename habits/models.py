@@ -6,8 +6,13 @@ from habits.validators import CreateHabitValidator
 
 
 class Habit(models.Model):
-    # Пользователь — создатель привычки
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    # Владелец привычки
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="owned_habits",
+        verbose_name="Владелец привычки",
+    )
 
     # Место, в котором необходимо выполнять привычку
     location = models.CharField(max_length=100, verbose_name="Место")
@@ -35,14 +40,6 @@ class Habit(models.Model):
 
     # Признак публичности
     is_public = models.BooleanField(default=False, verbose_name="Публичность")
-
-    # Владелец привычки
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="owned_habits",
-        verbose_name="Владелец привычки",
-    )
 
     class Meta:
         verbose_name = "Привычка"
