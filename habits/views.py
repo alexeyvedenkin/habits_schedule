@@ -1,7 +1,9 @@
 from rest_framework import generics
 
+from . import permissions
 from .models import Habit
 from .paginators import CustomPagination
+from .permissions import IsOwner
 from .serializers import HabitSerializer
 
 
@@ -16,12 +18,21 @@ class HabitListCreateView(generics.ListCreateAPIView):
         """Автоматически устанавливает текущего пользователя как владельца привычки"""
         serializer.save(owner=self.request.user)  # Сохраняем привычку с текущим пользователем как владельцем
 
+    def get_queryset(self):
+        # Возвращаем только привычки текущего пользователя
+        return self.queryset.filter(owner=self.request.user)
+
+    # Применяем разрешение
+    permission_classes = [permissions.IsAuthenticated]
+
 
 class HabitRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     """Представление для получения, обновления и удаления привычки по ID"""
 
     queryset = Habit.objects.all()  # Получаем привычки
     serializer_class = HabitSerializer  # Используем сериализатор для Habit
+
+    permission_classes = [permissions.IsAuthenticated, IsOwner]  # Проверяем, является ли пользователь владельцем
 
 
 class PublicHabitListView(generics.ListAPIView):
