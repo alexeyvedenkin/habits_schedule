@@ -12,6 +12,10 @@ class HabitListCreateView(generics.ListCreateAPIView):
     serializer_class = HabitSerializer  # Используем сериализатор для Habit
     pagination_class = CustomPagination  # Используем пагинатор для Habit
 
+    def perform_create(self, serializer):
+        """Автоматически устанавливает текущего пользователя как владельца привычки"""
+        serializer.save(owner=self.request.user)  # Сохраняем привычку с текущим пользователем как владельцем
+
 
 class HabitRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     """Представление для получения, обновления и удаления привычки по ID"""
