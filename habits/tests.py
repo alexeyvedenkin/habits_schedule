@@ -33,7 +33,7 @@ class HabitTests(APITestCase):
 
         # Создаём объект habit для использования в тестах
         self.habit = Habit.objects.create(
-            user=self.user,
+            owner=self.user,
             time=time(1, 0),
             reward="Some reward",
             duration=timedelta(seconds=120),
@@ -42,7 +42,7 @@ class HabitTests(APITestCase):
 
         # Создаем полезную привычку для теста
         self.unpleasant_habit = Habit.objects.create(
-            user=self.user,
+            owner=self.user,
             time=time(2, 0),
             reward="Unpleasant reward",
             duration=timedelta(seconds=60),
@@ -155,7 +155,7 @@ class HabitTests(APITestCase):
         """Тестирует создание приятной привычки со связанной привычкой"""
         # Создаем другую привычку, чтобы использовать её как связанную
         related_habit = Habit.objects.create(
-            user=self.user,
+            owner=self.user,
             time=time(2, 0),
             action="Related action",
             duration=timedelta(seconds=120),
@@ -166,7 +166,7 @@ class HabitTests(APITestCase):
         # Пытаемся создать привычку с is_pleasant=True и без related_habit
         with self.assertRaises(ValidationError) as context:
             habit = Habit(
-                user=self.user,
+                owner=self.user,
                 time=time(3, 0),
                 action="Pleasant action",
                 duration=timedelta(seconds=120),
@@ -183,7 +183,7 @@ class HabitTests(APITestCase):
         """Тест на создание полезной привычки с неприятной связанной привычкой"""
         # Создание связанной привычки
         related_habit = Habit.objects.create(
-            user=self.user,
+            owner=self.user,
             time=time(1, 0),
             reward="Related reward",  # Здесь мы задаем значение для вознаграждения
             duration=timedelta(seconds=120),
@@ -236,7 +236,11 @@ class HabitTests(APITestCase):
     def test_update_habit_validator_unpleasant_with_both_reward_and_related_habit(self):
         """Тестируем, что если привычка полезная и есть оба: вознаграждение и связанная привычка, выдается ошибка"""
         related_habit = Habit.objects.create(
-            user=self.user, time=time(2, 0), reward="Related reward", duration=timedelta(seconds=120), is_pleasant=True
+            owner=self.user,
+            time=time(2, 0),
+            reward="Related reward",
+            duration=timedelta(seconds=120),
+            is_pleasant=True
         )
         validator = UpdateHabitValidator(instance=self.habit)
         with self.assertRaises(ValidationError) as context:
@@ -280,7 +284,7 @@ class HabitTests(APITestCase):
 
         with self.assertRaises(ValidationError) as context:
             habit = Habit(
-                user=self.user,
+                owner=self.user,
                 time=time(3, 0),
                 reward="Test reward",
                 duration=timedelta(seconds=60),
