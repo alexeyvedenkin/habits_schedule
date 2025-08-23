@@ -1,6 +1,7 @@
 import unittest
 from datetime import time, timedelta
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from rest_framework import status
@@ -8,10 +9,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 from habits.models import Habit
+from habits.permissions import IsOwner
 from habits.serializers import HabitSerializer
 from habits.validators import CreateHabitValidator, UpdateHabitValidator
 from users.models import User
-
 
 class HabitTests(APITestCase):
 
@@ -35,6 +36,7 @@ class HabitTests(APITestCase):
         self.habit = Habit.objects.create(
             owner=self.user,
             time=time(1, 0),
+            location="Home",
             reward="Some reward",
             duration=timedelta(seconds=120),
             is_pleasant=False,
@@ -44,9 +46,24 @@ class HabitTests(APITestCase):
         self.unpleasant_habit = Habit.objects.create(
             owner=self.user,
             time=time(2, 0),
+            location="Home",
             reward="Unpleasant reward",
             duration=timedelta(seconds=60),
             is_pleasant=False,
+        )
+
+        self.another_user = get_user_model().objects.create(
+            email="another@example.com",
+            password="password123",
+            chat_id=98765
+        )
+        # Создаем привычку для другого пользователя
+        self.habit_for_another_user = Habit.objects.create(
+            owner=self.another_user,
+            time=time(2, 0),
+            reward="Reward for another user",
+            duration=timedelta(seconds=60),
+            is_pleasant=True,
         )
 
     def test_clean_valid_duration(self):
@@ -308,6 +325,16 @@ class HabitTests(APITestCase):
             str(context.exception.args[0]),
             "У полезной привычки должно быть либо вознаграждение, либо связанная привычка",
         )
+
+    def test_user_has_permission_to_own_habit(self):
+        """Проверяем, что владелец может получить доступ к своей привычке"""
+        permission = IsOwner()
+
+        # Создаем фейковый объект запроса, чтобы включить пользователя
+        request = self.client.get('/some-url/')  # URL не важен
+        request.user = self.user  # Устанавливаем текущего пользователя
+
+        self.assertTrue(permission.has_object_permission(request, None, self.habit))
 
 
 class TestHabitSerializer(unittest.TestCase):
