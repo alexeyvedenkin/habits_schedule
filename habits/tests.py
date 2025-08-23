@@ -14,6 +14,7 @@ from habits.serializers import HabitSerializer
 from habits.validators import CreateHabitValidator, UpdateHabitValidator
 from users.models import User
 
+
 class HabitTests(APITestCase):
 
     def setUp(self):
@@ -53,9 +54,7 @@ class HabitTests(APITestCase):
         )
 
         self.another_user = get_user_model().objects.create(
-            email="another@example.com",
-            password="password123",
-            chat_id=98765
+            email="another@example.com", password="password123", chat_id=98765
         )
         # Создаем привычку для другого пользователя
         self.habit_for_another_user = Habit.objects.create(
@@ -257,7 +256,7 @@ class HabitTests(APITestCase):
             time=time(2, 0),
             reward="Related reward",
             duration=timedelta(seconds=120),
-            is_pleasant=True
+            is_pleasant=True,
         )
         validator = UpdateHabitValidator(instance=self.habit)
         with self.assertRaises(ValidationError) as context:
@@ -331,7 +330,7 @@ class HabitTests(APITestCase):
         permission = IsOwner()
 
         # Создаем фейковый объект запроса, чтобы включить пользователя
-        request = self.client.get('/some-url/')  # URL не важен
+        request = self.client.get("/some-url/")  # URL не важен
         request.user = self.user  # Устанавливаем текущего пользователя
 
         self.assertTrue(permission.has_object_permission(request, None, self.habit))

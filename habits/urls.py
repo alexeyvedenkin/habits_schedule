@@ -10,6 +10,5 @@ urlpatterns = [
     path(
         "habits/<int:pk>/", HabitRetrieveUpdateDestroyView.as_view(), name="habit-detail"
     ),  # Получение, обновление и удаление
-    path("habits/public/", PublicHabitListView.as_view(), name="public-habit-list"
-         ),  # Маршрут для публичных привычек
+    path("habits/public/", PublicHabitListView.as_view(), name="public-habit-list"),  # Маршрут для публичных привычек
 ]
