@@ -1,6 +1,5 @@
-from rest_framework import generics
+from rest_framework import generics, permissions
 
-from . import permissions
 from .models import Habit
 from .paginators import CustomPagination
 from .permissions import IsOwner
