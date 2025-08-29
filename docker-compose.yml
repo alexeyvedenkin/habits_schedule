@@ -33,7 +33,7 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: learning_system
+      POSTGRES_DB: habits_schedule
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "11111"
     healthcheck:
