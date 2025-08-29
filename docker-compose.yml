@@ -27,7 +27,7 @@ services:
 
   db:
     image: postgres:17
-    container_name: db
+    container_name: mydb
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
