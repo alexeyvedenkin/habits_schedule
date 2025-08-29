@@ -1,0 +1,96 @@
+services:
+  web:
+    build: .
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DEBUG=True
+      - DATABASE_HOST=db
+      - REDIS_HOST=redis
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_BACKEND=${CELERY_RESULT_BACKEND}
+    volumes:
+      - .:/code
+      - static_volume:/code/static
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  db:
+    image: postgres:17
+    container_name: db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: learning_system
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "11111"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.docker
+    healthcheck:
+      test: [ 'CMD', 'redis-cli', 'ping' ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  celery:
+    build: .
+    command: sh -c "python -m celery -A config.celery worker -l info"
+    environment:
+      - DATABASE_HOST=db
+      - REDIS_HOST=redis
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_BACKEND=${CELERY_RESULT_BACKEND}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - .env.docker
+
+  celery-beat:
+    build: .
+    command: sh -c "python -m celery -A config.celery beat -l info"
+    environment:
+      - DATABASE_HOST=db
+      - REDIS_HOST=redis
+    depends_on:
+      celery:
+        condition: service_started
+    volumes:
+      - .:/code
+    env_file:
+      - .env.docker
+
+networks:
+  default:
+
+volumes:
+  postgres_data:
+  static_volume:
+  celerybeat:
